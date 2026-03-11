@@ -59,6 +59,15 @@ func GetBlogs(ctx *gin.Context) {
 }
 
 func PostBlog(ctx *gin.Context) {
+	var blog models.Blog
+	if err := ctx.ShouldBindJSON(&blog); err != nil {
+		ctx.JSON(400, gin.H{
+			"data":  nil,
+			"error": err,
+		})
+		return
+	}
+
 	file, err := ctx.FormFile("file")
 	if err != nil {
 		ctx.JSON(500, gin.H{
@@ -80,15 +89,6 @@ func PostBlog(ctx *gin.Context) {
 	dst := fmt.Sprintf("Uploads/%s", file.Filename)
 	if err := ctx.SaveUploadedFile(file, dst); err != nil {
 		ctx.JSON(500, gin.H{
-			"data":  nil,
-			"error": err,
-		})
-		return
-	}
-
-	var blog models.Blog
-	if err := ctx.ShouldBindJSON(&blog); err != nil {
-		ctx.JSON(400, gin.H{
 			"data":  nil,
 			"error": err,
 		})
