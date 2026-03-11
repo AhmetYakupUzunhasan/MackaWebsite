@@ -58,18 +58,11 @@ func GetBlogs(ctx *gin.Context) {
 	})
 }
 
-func PostBlog(ctx *gin.Context) {
-	var blog models.Blog
-	if err := ctx.ShouldBindJSON(&blog); err != nil {
-		ctx.JSON(400, gin.H{
-			"data":  nil,
-			"error": err,
-		})
-		return
-	}
-
+func PostBlogImage(ctx *gin.Context) {
+	title := ctx.Param("title")
 	file, err := ctx.FormFile("file")
 	if err != nil {
+		fmt.Println("You Monster")
 		ctx.JSON(500, gin.H{
 			"data":  nil,
 			"error": err,
@@ -95,7 +88,30 @@ func PostBlog(ctx *gin.Context) {
 		return
 	}
 
-	blog.ImageLink = dst
+	if err := database.UpdateBlogImageLinkByTitleInDb(dst, title); err != nil {
+		ctx.JSON(500, gin.H{
+			"data":  nil,
+			"error": err,
+		})
+		return
+	}
+
+	ctx.JSON(204, gin.H{
+		"data":  nil,
+		"error": nil,
+	})
+}
+
+func PostBlog(ctx *gin.Context) {
+	var blog models.Blog
+	if err := ctx.ShouldBindJSON(&blog); err != nil {
+		fmt.Println("You Bozo")
+		ctx.JSON(400, gin.H{
+			"data":  nil,
+			"error": err,
+		})
+		return
+	}
 
 	if err := database.InsertBlogIntoDb(&blog); err != nil {
 		ctx.JSON(500, gin.H{

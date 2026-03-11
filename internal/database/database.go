@@ -146,8 +146,18 @@ func InsertBlogIntoDb(blog *models.Blog) error {
 	return nil
 }
 
+func UpdateBlogImageLinkByTitleInDb(imageLink string, title string) error {
+	sql := "UPDATE blogs SET image_link = ? WHERE title = ?"
+	if _, err := db.Exec(sql, imageLink, title); err != nil {
+		fmt.Println("Error when updating blog image link by title: ", err)
+		return err
+	}
+
+	return nil
+}
+
 func UpdateBlogByTitleInDb(blog *models.Blog) error {
-	query := "UPDATE users SET title = ?, subtitle = ?, text = ?, image_link = ? WHERE title = ?"
+	query := "UPDATE blogs SET title = ?, subtitle = ?, text = ?, image_link = ? WHERE title = ?"
 	if _, err := db.Exec(query, blog.Title, blog.SubTitle, blog.Text, blog.ImageLink, blog.Title); err != nil {
 		fmt.Println("Error when updating blog in db: ", err)
 		return err
