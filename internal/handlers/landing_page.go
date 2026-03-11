@@ -95,6 +95,8 @@ func PostBlog(ctx *gin.Context) {
 		return
 	}
 
+	blog.ImageLink = dst
+
 	if err := database.InsertBlogIntoDb(&blog); err != nil {
 		ctx.JSON(500, gin.H{
 			"data":  nil,
