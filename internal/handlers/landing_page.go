@@ -3,6 +3,8 @@ package handlers
 import (
 	"MackaWebsite/internal/database"
 	"MackaWebsite/internal/models"
+	"fmt"
+	"path/filepath"
 
 	"github.com/gin-gonic/gin"
 )
@@ -57,6 +59,33 @@ func GetBlogs(ctx *gin.Context) {
 }
 
 func PostBlog(ctx *gin.Context) {
+	file, err := ctx.FormFile("file")
+	if err != nil {
+		ctx.JSON(500, gin.H{
+			"data":  nil,
+			"error": err,
+		})
+		return
+	}
+
+	ext := filepath.Ext(file.Filename)
+	if ext != ".png" && ext != ".jpeg" && ext != ".jpg" {
+		ctx.JSON(400, gin.H{
+			"data":  nil,
+			"error": "File Type is not suported",
+		})
+		return
+	}
+
+	dst := fmt.Sprintf("Uploads/%s", file.Filename)
+	if err := ctx.SaveUploadedFile(file, dst); err != nil {
+		ctx.JSON(500, gin.H{
+			"data":  nil,
+			"error": err,
+		})
+		return
+	}
+
 	var blog models.Blog
 	if err := ctx.ShouldBindJSON(&blog); err != nil {
 		ctx.JSON(400, gin.H{
