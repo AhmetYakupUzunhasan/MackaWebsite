@@ -53,7 +53,7 @@ func InitializeDatatable() error {
 			title TEXT NOT NULL PRIMARY KEY,
 			subtitle TEXT NOT NULL,
 			text TEXT NOT NULL,
-			image_link TEXT NOT NULL
+			image_link TEXT
 		);
 	`
 
@@ -114,7 +114,7 @@ func SelectBlogsFromDb() ([]models.Blog, error) {
 	var blogs []models.Blog
 	for rows.Next() {
 		var c models.Blog
-		if err := rows.Scan(&c.Title, &c.SubTitle, &c.Text); err != nil {
+		if err := rows.Scan(&c.Title, &c.SubTitle, &c.Text, &c.ImageLink); err != nil {
 			fmt.Println("Error when selecting blogs from db: ", err)
 			return nil, err
 		}
@@ -156,10 +156,28 @@ func UpdateBlogImageLinkByTitleInDb(imageLink string, title string) error {
 	return nil
 }
 
-func UpdateBlogByTitleInDb(blog *models.Blog) error {
-	query := "UPDATE blogs SET title = ?, subtitle = ?, text = ?, image_link = ? WHERE title = ?"
-	if _, err := db.Exec(query, blog.Title, blog.SubTitle, blog.Text, blog.ImageLink, blog.Title); err != nil {
+func UpdateBlogByTitleInDb(title string, blog *models.Blog) error {
+	query := "UPDATE blogs SET title = ?, subtitle = ?, text = ? WHERE title = ?"
+	result, err := db.Exec(query, blog.Title, blog.SubTitle, blog.Text, title)
+	if err != nil {
 		fmt.Println("Error when updating blog in db: ", err)
+		return err
+	}
+
+	affectedRows, err := result.RowsAffected()
+	if err != nil || affectedRows == 0 {
+		return sql.ErrNoRows
+	}
+
+	fmt.Println("affected ROws: ", affectedRows)
+
+	return nil
+}
+
+func VerifyBlogFromDbByTitle(title string) error {
+	result := db.QueryRow("SELECT 1 FROM blogs WHERE title = ?", title)
+	var exists int
+	if err := result.Scan(&exists); err != nil {
 		return err
 	}
 

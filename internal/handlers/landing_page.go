@@ -5,6 +5,7 @@ import (
 	"MackaWebsite/internal/models"
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -58,10 +59,18 @@ func GetBlogs(ctx *gin.Context) {
 	})
 }
 
-func PostBlogImage(ctx *gin.Context) {
+func UpdateBlogImageByTitle(ctx *gin.Context) {
 	title := ctx.Param("title")
 	file, err := ctx.FormFile("file")
 	if err != nil {
+		if strings.Contains(err.Error(), "http: request body too large") {
+			ctx.JSON(413, gin.H{
+				"data":  nil,
+				"error": err.Error(),
+			})
+			return
+		}
+
 		fmt.Println("You Monster")
 		ctx.JSON(500, gin.H{
 			"data":  nil,
@@ -75,6 +84,14 @@ func PostBlogImage(ctx *gin.Context) {
 		ctx.JSON(400, gin.H{
 			"data":  nil,
 			"error": "File Type is not suported",
+		})
+		return
+	}
+
+	if err := database.VerifyBlogFromDbByTitle(title); err != nil {
+		ctx.JSON(400, gin.H{
+			"data":  nil,
+			"error": err.Error(),
 		})
 		return
 	}
@@ -107,7 +124,7 @@ func PostBlog(ctx *gin.Context) {
 	if err := ctx.ShouldBindJSON(&blog); err != nil {
 		ctx.JSON(400, gin.H{
 			"data":  nil,
-			"error": err,
+			"error": err.Error(),
 		})
 		return
 	}
@@ -115,7 +132,7 @@ func PostBlog(ctx *gin.Context) {
 	if err := database.InsertBlogIntoDb(&blog); err != nil {
 		ctx.JSON(500, gin.H{
 			"data":  nil,
-			"error": err,
+			"error": err.Error(),
 		})
 		return
 	}
@@ -127,24 +144,26 @@ func PostBlog(ctx *gin.Context) {
 }
 
 func UpdateBlogByTitle(ctx *gin.Context) {
+	title := ctx.Param("title")
+
 	var blog models.Blog
 	if err := ctx.ShouldBindJSON(&blog); err != nil {
 		ctx.JSON(400, gin.H{
 			"data":  nil,
-			"error": err,
+			"error": err.Error(),
 		})
 		return
 	}
 
-	if err := database.UpdateBlogByTitleInDb(&blog); err != nil {
+	if err := database.UpdateBlogByTitleInDb(title, &blog); err != nil {
 		ctx.JSON(400, gin.H{
 			"data":  nil,
-			"error": err,
+			"error": err.Error(),
 		})
 		return
 	}
 
-	ctx.JSON(204, gin.H{
+	ctx.JSON(200, gin.H{
 		"data":  blog,
 		"error": nil,
 	})
