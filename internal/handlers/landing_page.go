@@ -105,7 +105,6 @@ func PostBlogImage(ctx *gin.Context) {
 func PostBlog(ctx *gin.Context) {
 	var blog models.Blog
 	if err := ctx.ShouldBindJSON(&blog); err != nil {
-		fmt.Println("You Bozo")
 		ctx.JSON(400, gin.H{
 			"data":  nil,
 			"error": err,
